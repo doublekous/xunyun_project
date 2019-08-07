@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block css %}
+    <style>
+        .txt {
+            width: 400px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            display: inline-block;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<div id="vm_data">
+<div class="form-inline">
+                每行输入一个ip或者多个ip,多个ip时请输入请换行<br/>
+                <textarea type="text" style="height: 50px weight: 100px" name="ip_query" id="ip_query" rows="10" class="input-large"></textarea><br/>
+            </div>
+    <div class="form-group">
+        <button type="button" class="btn btn-primary"onclick="checkip()" >点我进行检测</button>
+        <button type="button" class="btn btn-primary"onclick="vm.searchInfo()" >搜索</button>
+    </div>
+    <div class="form-group">
+        <button type="button" class="btn btn-primary" onclick="download()">导出IP</button>
+    </div>
+
+    <div class="form-group file">
+        <form name="upload_ip" id="upload_ip" action="/ip/upload_ip/" method="post"
+              enctype="multipart/form-data">
+            {% csrf_token %}
+            <input id="file_upload_trumpl" name="file_upload_trumpl" type="file">
+            <br>
+            <button type="button" name="upload_ip" id="upload_ip" onclick="check_filepath()" type="submit">上传</button>
+        </form>
+    </div>
+    <div class="form-group">
+        输入连续ip例如：58.82.214.0-58.82.214.255<br/>
+        <textarea type="text" style="height: 50px weight: 10px" name="continuous_ip" id="continuous_ip" rows="2" class="input-large"></textarea><br/>
+        <button type="button" class="btn btn-primary"onclick="continuous_ip()" >检测</button>
+    </div>
+
+
+
+ <div class="row" >
+        <div class="panel panel-default">
+            <table class="table table-striped" >
+            <thead>
+                <tr>
+                    <th style="text-align: center"width="50" >IP</th>
+                    <th style="text-align: center" width="150" >IP_STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <template v-for="result in searchdatas">
+                    <tr>
+                    <th style="text-align: center">${ result.ip }</th>
+                    <th style="text-align: center">${ result.ip_status }</th>
+                    </tr>
+                </template>
+
+            </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="pagination-container" v-if="page_items.num_pages > 1">
+            <ul class="pagination">
+                <li :class="{active:page==page_items.number}" v-for="page in page_items.page_range_custom">
+                    <span v-if="page==-1">...</span>
+                    <a href="#" v-else @click.prevent="searchInfo(page)">${page}</a>
+                </li>
+                <li class="lastLi">第<input type="text" :data-max-page="page_items.num_pages" class="toPage" onkeypress="if(event.keyCode==13){if($(this).val() > searchInfo($(this).data('max-page'))){$(this).val($(this).data('max-page'))}$(this).parents('.pagination').find('button').click();$(this).val('');}">页</li>
+                <li><button href="#" class="btn btn-primary" onclick="vm.searchInfo($(this).parents('.pagination').find('input').val())">GO</button></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script>
+    function download() {
+        var args_data = {
+            "ip_query": $("#ip_query").val().trim(),
+        };
+        var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+        $.ajax({
+            type: 'POST',
+            url: '/ip/export_ip/',
+            data: args_data,
+            success: function(data) {
+                 window.location.href = "/ip/export_ip/?ip_query="+$("#ip_query").val().trim();
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                alert('失败')
+            }
+        });
+    }
+    function checkip() {
+        var args_data = {
+        "ip_query": $("#ip_query").val().trim(),
+        };
+        var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+        $.ajax({
+        type: 'POST',
+<!--        url: 'ip/ip_query',-->
+        data: args_data,
+        success: function(data) {
+            var datas = JSON.parse(data);
+            if (datas.code == '200') {
+                alert('检测完成，请点击搜索')
+            } else {
+                alert(datas.error);
+            }
+        }
+        });
+    }
+    function continuous_ip() {
+        var args_data = {
+        "continuous_ip": $("#continuous_ip").val().trim(),
+        };
+        var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+        $.ajax({
+        type: 'POST',
+        url: '/ip/continuous_ip/',
+        data: args_data,
+        success: function(data) {
+            var datas = JSON.parse(data);
+            if (datas.code == '200') {
+                alert('检测完成，请直接下载')
+            } else {
+                alert(datas.error);
+            }
+        }
+        });
+    }
+</script>
+
+
+<script type="text/javascript">
+    function check_filepath(){
+        if(!$("#file_upload_trumpl").val()){
+            alert("请先选择文件！");
+            return false;
+        }
+        var strs = $("#file_upload_trumpl").val().split('.');
+        if((strs[strs.length-1] != "csv")){
+            alert("请上传csv格式的文件！");
+            return false;
+        }
+<!--        var args_data = {-->
+<!--            "file_upload_trumpl": $("#file_upload_trumpl").val().trim(),-->
+<!--        }-->
+<!--        var csrf = $('input[name="csrfmiddlewaretoken"]').val()-->
+<!--        $.ajax({-->
+<!--        type: 'POST',-->
+<!--        url: '/ip/upload_ip/',-->
+<!--        data: args_data,-->
+<!--        success: function(data) {-->
+<!--            var datas = JSON.parse(data);-->
+<!--            if (datas.code == '200') {-->
+<!--                alert('导出检测完成，请直接下载异常ip')-->
+<!--            }-->
+<!--        }-->
+<!--        });-->
+        $("#upload_ip").submit();
+<!--        alert('上传成功，请直接去下载异常ip')-->
+
+    }
+</script>
+
+<script>
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+    }
+    return cookieValue;
+}
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+	var csrftoken = getCookie('csrftoken');
+	if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+})
+
+    </script>
+<script>
+   var vm = new Vue({
+    el: '#vm_data',
+    data: {
+        searchdatas: [],
+        page: 1,
+        page_items: {},
+    },
+    delimiters: ["${", "}"],
+    methods: {
+        searchInfo: function (page_no) {
+            var page = page_no ? page_no : 1;
+            var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+            $.ajax({
+                type: 'POST',
+                url: '/ip/search_ip/',
+                data: {
+                    "ip_query": $("#ip_query").val().trim(),
+                    "page": page
+                },
+                headers: {'X-CSRFTOKEN': csrf},
+                success: function (data) {
+                    var datas = JSON.parse(data);
+                    if (datas.code == '200') {
+                        vm.searchdatas = datas.searchdatas;
+                        vm.page_items = datas.page_items;
+                    } else {
+                        alert(datas.error);
+                    }
+                },
+                error: function () {
+                    alert('error');
+                }
+            });
+        },
+        del_medialibary: function (id) {
+            var r = confirm("确定要删除吗？");
+            if (r == true) {
+                var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+                $.ajax({
+                    url: '/medialibary/del_medialibary/' + id + '/',
+                    dateType: 'json',
+                    type: 'POST',
+                    headers: {'X-CSRFTOKEN': csrf},
+                    success: function (data) {
+                        if (data.code == '200') {
+                            alert('删除成功')
+                            {#                locations.href = '/medialibary/download_mode/'#}
+                            window.location.reload();
+
+                        }
+                    },
+                    error: function (data) {
+                        alert('删除失败')
+                    }
+                });
+            }
+        }
+    },
+    mounted: function () {
+            this.searchInfo();
+        }
+});
+</script>
+
+{% endblock %}

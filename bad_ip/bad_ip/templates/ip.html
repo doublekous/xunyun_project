@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script type="text/javascript">
+   function getValue(){
+       var input=document.getElementById("myId");//通过id获取文本框对象
+       alert(input.value);//通过文本框对象获取value值
+    }
+</script>
+<body>
+    <form action = "http://127.0.0.1:5000/ip" method = "get"
+            enctype = "multipart/form-data">
+        <textarea rows="10" cols="50" id="myId"></textarea>
+        <input type="button" value="Submit" onClick="getValue()"/>
+        </form>
+</body>
+</html>
